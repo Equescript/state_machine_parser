@@ -4,8 +4,9 @@ mod bnf_rules_compiler;
 mod error;
 mod state_machine;
 pub use bnf_rules_compiler::compile_bnf_rules;
-pub use state_machine::{State, StateAction, StateMachineParser, debug_print_match_record};
+pub use state_machine::{State, StateAction, StateMachineParser, MatchRecord, debug_print_match_record};
 pub use bnf_rules_compiler::StateManager;
+pub use error::{BNFCompileError, ParseError};
 
 pub trait TokenType: Clone + Eq + Hash {}
 
