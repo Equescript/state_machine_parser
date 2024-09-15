@@ -72,13 +72,18 @@ impl<TT> StateManager<TT> where TT: TokenType {
             }
         }
     }
-    /* fn write_file(states: &Vec<State<TT>>) -> std::io::Result<()> {
-        let mut file = std::fs::File::create("states.txt")?;
-        for state in states {
-            writeln!(file, "{}", state)?
+    pub fn debug_write_states<P>(&self, path: P) -> std::io::Result<()> where TT: std::fmt::Debug, P: AsRef<std::path::Path> {
+        use std::io::Write;
+        let mut file = std::fs::File::create(path)?;
+        for state in &self.states {
+            let rule_name = match self.rule_names.get(&state.rule) {
+                Some(name) => name,
+                None => return Err(std::io::Error::other(format!("Invalid RuleId: {}!", state.rule)))
+            };
+            writeln!(file, "{} {} {:?}", rule_name, state.id, state.actions)?
         }
         Ok(())
-    } */
+    }
     pub fn print_states(&self) {
 
         /* if let Err(e) = write_file(&self.states) {
@@ -224,21 +229,21 @@ where S: ToString, TT: TokenType + TryFrom<Vec<char>> {
         placeholders: Vec::new(),
         start_states: HashMap::from([(IDENTIFIER, 0), (BNF_RULE, 2), (BNF_RULES, 6)]),
         rule_ids: HashMap::new(),
-        rule_names: HashMap::new(),
+        rule_names: HashMap::from([
+            (0, "Identifier".into()),
+            (1, "BNFRule".into()),
+            (2, "BNFRules".into()),
+        ]),
     };
+
     let rules_tokens = rules_string.to_string().chars().collect::<Vec<char>>();
     let mut bnf_rules_parser = StateMachineParser::new(&bnf_rules_state_manager);
     let match_records = match bnf_rules_parser.parse(&rules_tokens, BNF_RULES) {
         Ok(m) => m,
         Err(e) => return Err(BNFCompileError::ParseError(e)),
     };
-    /* let rule_names = HashMap::from([
-        (IDENTIFIER, "IDENTIFIER"),
-        (BNF_RULE, "BNF_RULE"),
-        (BNF_RULES, "BNF_RULES"),
-    ]);
-    state_machine::debug_print_match_record(&rules_tokens, &match_records, &rule_names);
-    return Err(BNFCompileError::UnknownError); */
+    // state_machine::debug_print_match_record(&rules_tokens, &match_records, &bnf_rules_state_manager.rule_names);
+    // return Err(BNFCompileError::UnknownError);
     let mut ast_node: ASTNode = ASTNode::from(&match_records);
     let mut rules_data: Vec<(Vec<char>, Vec<BNFDescription<TT, Vec<char>>>)> = Vec::new();
     let mut rule_ids: HashMap<Vec<char>, RuleId> = HashMap::new();
